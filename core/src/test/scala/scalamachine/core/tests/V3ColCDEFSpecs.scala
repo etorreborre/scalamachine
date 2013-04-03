@@ -10,61 +10,64 @@ import HTTPHeaders._
 import HTTPMethods._
 import ReqRespData.Metadata
 
-class V3ColCDEFSpecs extends Specification with Mockito with SpecsHelper with WebmachineDecisions { def is =
-  "Webmachine V3 Column C, D, E & F".title                                          ^
-                                                                                    p^
-  "C3 - Accept Exists?"                                                             ^
-    "If the Accept header doesn't exist"                                            ^
-      "D4 is returned and 1st type in resources provided list is set in metadata"   ! testMissingAcceptHeader ^
-      "If provided list empty, text/plain is set in metadata, D4 still returned"    ! testMissingAcceptEmptyProvidedList ^p^
-    "If the Accept header exists decision C4 is returned"                           ! testAcceptHeaderExists ^
-                                                                                    p^
-  "C4 - Acceptable Media Type Available?"                                           ^
-    "if the media type is provided by the resource"                                 ^
-      "Decision D4 is returned & the mediatype is set as content type in metadata"  ! testMediaTypeProvided ^p^
-    "if the media type is not provided by the resource"                             ^
-      "response with code 406 is returned"                                          ! testMediaTypeNotProvided ^
-                                                                                    p^p^
-  "D4 - Accept-Language Exists?"                                                    ^
-    "if Accept-Language header exists decision D5 is returned"                      ! testHasAcceptLanguage ^
-    "otherwise decision E5 is returned"                                             ! testMissingAcceptLanguage ^
-                                                                                    p^
-  "D5 - Accept-Language Availble?"                                                  ^
-    "asks resource if language is available"                                        ^
-      "if it is, decision E5 is returned"                                           ! testIsLanguageAvailableTrue ^
-      "otherwise, a response with code 406 is returned"                             ! testIsLanguageAvailableFalse ^
-                                                                                    p^p^
-  "E5 - Accept-Charset Exists?"                                                     ^
-    "If the Accept-Charset header exists decision E6 is returned"                   ! testAcceptCharsetExists ^
-    "Otherwise"                                                                     ^
-      """If "*" charset is acceptable to resource"""                                ^
-        "decision F6 is returned"                                                   ! testAcceptMissingStarAcceptable ^
-        "first charset provided by resource is set as chosen in metadata"           ! testAcceptMissingStarOkCharsetChosen ^p^
-      "If resource specifies charset negotioation short circuting, F6 is returned"  ! testAcceptMissingCharsetNegShortCircuit ^
-      "otherwise, a response with code 406 is returned"                             ! testAcceptMissingStarNotAcceptable ^
-                                                                                    p^p^
-  "E6 - Accept-Charset Available?"                                                  ^
-    "If resource specifies charset negotiation short circuting, F6 is returned"     ! testAcceptExistsCharsetNegShortCircuit ^
-    "If the charset is provided by the resource, F6 returned, chosen set in meta"   ! testAcceptExistsAcceptableSetInMeta ^
-    "If charset is not provided by the resource, response w/ code 406 returned"     ! testAcceptExistsNotAcceptable ^
-                                                                                    p^
-  "F6 - Accept-Encoding Exists?"                                                    ^
-    "sets the chosen content type/charset in response content type header"          ^
-      """if both are None, "text/plain" is set"""                                   ! testF6MediaAndCharsetNotChosen ^
-      "if just the content type is Some, its string value is set"                   ! testF6MediaChosenCharsetNot ^
-      """if just the charset is Some, "text/plain; charset=<value>" is set"""       ! testF6CharsetChosenMediaNot ^
-      "if both are set the entire string is set"                                    ! testF6MediaAndCharsetChosen ^p^
-    "if the accept-encoding header exists, decision F7 is returned"                 ! testAcceptEncodingExists ^
-    "if the accept-encoding header is missing"                                      ^
-      """if "identity;q=1.0,*;q=0.5" is acceptable"""                               ^
-        "chosen is set as the value of Content-Encoding header,in meta, G7 returned"! testAcceptEncodingMissingDefaultAcceptable ^p^
-      "otherwise, a response with code 406 is returned"                             ! testAcceptEncodingMissingDefaultNotAcceptable ^
-                                                                                    p^p^
-  "F7 - Accept Encoding Available?"                                                 ^
-    "If resource specifies encoding neg. short circuiting, G7 returned"             ! testAcceptEncodingExistsShortCircuit ^
-    "If charset is provided by the resource, G7 returned, chosen set in resp./meta" ! testAcceptEncodingExistsAcceptable ^
-    "If charset is not provided, response w/ code 406 returned"                     ! testAcceptEncodingExistsNotAcceptable ^
-                                                                                    end
+class V3ColCDEFSpecs extends Specification with Mockito with SpecsHelper with WebmachineDecisions { def is = s2""" ${ "Webmachine V3 Column C, D, E & F".title }
+                                                                                   
+  C3 - Accept Exists?                                                              
+    If the Accept header doesn't exist                                             
+      D4 is returned and 1st type in resources provided list is set in metadata    $testMissingAcceptHeader 
+      If provided list empty, text/plain is set in metadata, D4 still returned     $testMissingAcceptEmptyProvidedList 
+      
+    If the Accept header exists decision C4 is returned                            $testAcceptHeaderExists 
+                                                                                  
+  C4 - Acceptable Media Type Available?                                           
+    if the media type is provided by the resource                                 
+      Decision D4 is returned & the mediatype is set as content type in metadata   $testMediaTypeProvided 
+      
+    if the media type is not provided by the resource                              
+      response with code 406 is returned                                           $testMediaTypeNotProvided 
+                                                                                  
+  D4 - Accept-Language Exists?                                                    
+    if Accept-Language header exists decision D5 is returned                       $testHasAcceptLanguage 
+    otherwise decision E5 is returned                                              $testMissingAcceptLanguage 
+                                                                                  
+  D5 - Accept-Language Availble?                                                  
+    asks resource if language is available                                        
+      if it is, decision E5 is returned                                            $testIsLanguageAvailableTrue 
+      otherwise, a response with code 406 is returned                              $testIsLanguageAvailableFalse 
+                                                                                  
+  E5 - Accept-Charset Exists?                                                     
+    If the Accept-Charset header exists decision E6 is returned                    $testAcceptCharsetExists 
+    Otherwise                                                           
+      If * charset is acceptable to resource                            
+        decision F6 is returned                                                    $testAcceptMissingStarAcceptable 
+        first charset provided by resource is set as chosen in metadata            $testAcceptMissingStarOkCharsetChosen 
+        
+      If resource specifies charset negotioation short circuting, F6 is returned   $testAcceptMissingCharsetNegShortCircuit 
+      otherwise, a response with code 406 is returned                              $testAcceptMissingStarNotAcceptable 
+                                                                                  
+  E6 - Accept-Charset Available?                                                  
+    If resource specifies charset negotiation short circuting, F6 is returned      $testAcceptExistsCharsetNegShortCircuit 
+    If the charset is provided by the resource, F6 returned, chosen set in meta    $testAcceptExistsAcceptableSetInMeta 
+    If charset is not provided by the resource, response w/ code 406 returned      $testAcceptExistsNotAcceptable 
+                                                                                  
+  F6 - Accept-Encoding Exists?                                                    
+    sets the chosen content type/charset in response content type header          
+      if both are None, text/plain is set                                          $testF6MediaAndCharsetNotChosen 
+      if just the content type is Some, its string value is set                    $testF6MediaChosenCharsetNot 
+      if just the charset is Some, text/plain; charset=<value> is set              $testF6CharsetChosenMediaNot 
+      if both are set the entire string is set                                     $testF6MediaAndCharsetChosen 
+    if the accept-encoding header exists, decision F7 is returned                  $testAcceptEncodingExists 
+    if the accept-encoding header is missing                              
+      if identity;q=1.0,*;q=0.5 is acceptable                                
+        chosen is set as the value of Content-Encoding header,in meta, G7 returned $testAcceptEncodingMissingDefaultAcceptable 
+        
+      otherwise, a response with code 406 is returned                              $testAcceptEncodingMissingDefaultNotAcceptable 
+                                                                                  
+  F7 - Accept Encoding Available?                                                 
+    If resource specifies encoding neg. short circuiting, G7 returned              $testAcceptEncodingExistsShortCircuit 
+    If charset is provided by the resource, G7 returned, chosen set in resp./meta  $testAcceptEncodingExistsAcceptable 
+    If charset is not provided, response w/ code 406 returned                      $testAcceptEncodingExistsNotAcceptable 
+                                                                                   """
 
   // TODO: change D5 to do real language negotiation like ruby webmachine implementation
 

@@ -8,95 +8,101 @@ import Prop._
 import scalamachine.core._
 import dispatch._
 
-class RouteSpecs extends Specification with ScalaCheck { override def is =
-  "Routes".title                                                                    ^
-  """
-  Routes are a partial function from a request path
-  to a resource
-  """                                                                               ^
-                                                                                    p^
-  "Matching Paths"                                                                  ^
-    "Routes with no data parts"                                                     ^
-      "if the route does not end in a star term"                                    ^
-        "path matches iif it each token is equal to each string part"               ! AllStringRoutesNoStar.testExactMatchingPath ^
-        "path does not match if >= one token is not equal to a string part"         ! AllStringRoutesNoStar.testPartDoesntMatch ^
-        "path does not match if it has less tokens than route parts"                ! AllStringRoutesNoStar.testLessTokensThanParts ^
-        "path does not match if it has more tokens than route parts"                ! AllStringRoutesNoStar.testMoreTokensThanParts ^
-        "path data always has as empty dispatch path string"                        ! AllStringRoutesNoStar.testDispPathAlwaysEmpty ^
-        "path data always has an empty path tokens Seq"                             ! AllStringRoutesNoStar.testPathTokensAlwaysEmpty ^p^
-      "if the route does end in a star term"                                        ^
-        "path matches if each token is equal to each string part"                   ! AllStringRoutesWithStar.testExactStartingWithMatch ^
-        "path matches with tokens equal to parts even with leftover tokens"         ! AllStringRoutesWithStar.testLeftoverTokensStillMatch ^
-        "path does not match if >= one token is not equal to a string part"         ! AllStringRoutesWithStar.testPartDoesntMatch ^
-        "path does not match if there are less tokens than route parts"             ! AllStringRoutesWithStar.testLessTokensThanParts ^
-        "path data has an empty dispatch string if num tokens == num route terms"   ! AllStringRoutesWithStar.testDispPathAlwaysEmpty ^
-        "path data has left over tokens seperated by slash as dispatch string"      ! AllStringRoutesWithStar.testLeftoverTokensDispPath ^
-        "path data has empty path tokens Seq if num tokens == num route terms"      ! AllStringRoutesWithStar.testLeftoverTokensPathTokens ^
-        "path data has left over tokens in path tokens Seq with order preserved"    ! AllStringRoutesWithStar.testPathTokensAlwaysEmpty ^p^
-      "path data always have empty path info map"                                   ! testStringRoutesAlwaysHaveEmptyPathInfo ^p^
-    "Routes with data parts"                                                        ^
-      "if the route does not end in a star term"                                    ^
-        "if the route contains string terms"                                        ^
-          "path matches iif each token that has corresponding string part matches"  ! MixedPathNoStar.testMatchesIIFStringPartsMatch ^
-          "path does not match if >= one token does not match corresponding string" ! MixedPathNoStar.testStringPartDoesntMatch ^
-          "path does not match if it has less tokens than route parts"              ! MixedPathNoStar.testLessTokensThanParts ^
-          "path does not match if has more tokens than route parts"                 ! MixedPathNoStar.testMoreTokensThanParts ^
-          "path data always has as empty dispatch path string"                      ! MixedPathNoStar.testDispPathAlwaysEmpty ^
-          "path data always has an empty path tokens Seq"                           ! MixedPathNoStar.testPathTokensAlwaysEmpty ^p^
-        "if the route does not contain string terms"                                ^
-          "path matches only if the number of tokens equal the number of terms"     ! AllDataRouteNoStar.testEqualLengths ^
-          "the path does not match otherwise"                                       ! AllDataRouteNoStar.testUnequalLengths ^
-          "path data always has as empty dispatch path string"                      ! AllDataRouteNoStar.testDispPathAlwaysEmpty ^
-          "path data always has an empty path tokens Seq"                           ! AllDataRouteNoStar.testPathTokensAlwaysEmpty ^p^p^
-      "if the route ends in a star term"                                            ^
-        "if the route contains string terms"                                        ^
-          "path matches if each token thas has corresponding string part matches"   ! MixedPathWithStar.testMatchesIIFStringPartsMatch ^
-          "path matches with tokens equal to string parts even with leftover tokens"! MixedPathWithStar.testMatchesWithLeftoverTokens ^
-          "path does not match if >= one token is not equal to corresponding string"! MixedPathWithStar.testStringPartDoesntMatch ^
-          "path does not match if there are less tokens than route parts"           ! MixedPathWithStar.testLessTokensThanParts ^
-          "path data has an empty dispatch string if num tokens == num route terms" ! MixedPathWithStar.testDispPathAlwaysEmpty ^
-          "path data has left over tokens seperated by slash as dispatch string"    ! MixedPathWithStar.testLeftoverTokensDispPath ^
-          "path data has empty path tokens Seq if num tokens == num route terms"    ! MixedPathWithStar.testPathTokensAlwaysEmpty  ^
-          "path data has left over tokens in path tokens Seq with order preserved"  ! MixedPathWithStar.testLeftoverTokensPathTokens ^p^
-        "if the route does not contain string terms"                                ^
-          "path matches only if the number of tokens is >= number of terms"         ! AllDataRouteWithStar.testWithLeftoverTokens ^
-          "the path does not match otherwise"                                       ! AllDataRouteWithStar.testLessTokensThanParts ^
-          "path data has an empty dispatch string if num tokens == num route terms" ! AllDataRouteWithStar.testDispPathAlwaysEmpty ^
-          "path data has left over tokens seperated by slash as dispatch string"    ! AllDataRouteWithStar.testLeftoverTokensDispPath ^
-          "path data has empty path tokens Seq if num tokens == num route terms"    ! AllDataRouteWithStar.testPathTokensAlwaysEmpty ^
-          "path data has left over tokens in path tokens Seq with order preserved"  ! AllDataRouteWithStar.testLeftoverTokensPathTokens ^p^p^
-      "path data's path info contains key corresponding to token for each data part"! testMixedRoutesPathInfo ^
-                                                                                    endp^
-  "Matching Hosts"                                                                  ^
-    "if host route does not begin with a star term"                                 ^
-      "matches iif each token with corresponding string part matches"               ! MixedHostNoStar.testMatchesIIFStringPartsMatch ^
-      "does not match if tokens.length < parts.length"                              ! MixedHostNoStar.testLessTokensThanParts ^
-      "does not match if tokens.length > parts.length"                              ! MixedHostNoStar.testMoreTokensThanParts ^
-      "does not match if >= 1 token does not match corresponding string part"       ! MixedHostNoStar.testStringPartDoesntMatch ^
-      "host data always has empty dispatch subdomain string"                        ! MixedHostNoStar.testDispSubDomainAlwaysEmpty ^
-      "host data always has empty subdomain tokens"                                 ! MixedHostNoStar.testSubdomainTokensAlwaysEmpty ^
-      "host data has entry in host info for every data part"                        ! MixedHostNoStar.testHostInfo ^p^
-    "if host route begins with a star term"                                         ^
-      "matches iif each token with corresponding string part matches (lefovers ok)" ! MixedHostWithStar.testMatchesWithLeftoverTokens ^
-      "does not match if tokens.length < parts.length"                              ! MixedHostWithStar.testLessTokensThanParts ^
-      "does not match if >= 1 token does not match corresponding string part"       ! MixedHostWithStar.testStringPartDoesntMatch ^
-      "host data has empty dispatch subdomain if tokens.length == parts.length"     ! MixedHostWithStar.testDispSubDomainAlwaysEmpty ^
-      "host data has leftover tokens seperated by dots as dispatch subdomain"       ! MixedHostWithStar.testLeftoverTokensDispSubdomain ^
-      "host data has empty dispatch tokens if tokens.length == parts.length"        ! MixedHostWithStar.testSubdomainTokensAlwaysEmpty ^
-      "host data has left tokens as dispatch tokens w/ order preserved"             ! MixedHostWithStar.testLeftoverTokensSubdomainTokens ^
-      "host data has entry in host info for every data part"                        ! MixedHostWithStar.testHostInfo ^
-                                                                                    endp^
-  "Matching Hosts and Paths"                                                        ^
-    "matches if host and path route matches given host and path tokens"             ! testHostAndPathRoute ^
-    "does not match if host route does not match given host tokens"                 ! testHostAndPathHostNotMatching ^
-    "does not match if path route does not match given path tokens"                 ! testHostAndPathPathNotMatching ^
-                                                                                    endp^
-  "Gaurds"                                                                          ^
-    "if unguarded route matches"                                                    ^
-      "if guard returns true, route matches"                                        ! testGuardTrue ^
-      "if guard returns false, route does not match"                                ! testGuardFalse ^p^
-    "if unguarded route does not match, guard is never run"                         ! testGuardNotCalledWhenNotDefined ^
-                                                                                    end
+class RouteSpecs extends Specification with ScalaCheck { override def is = s2""" ${"Routes".title}
+  
+  Routes are a partial function from a request path to a resource
+
+  Matching Paths
+    Routes with no data parts
+      if the route does not end in a star term
+        path matches iif it each token is equal to each string part                 ${ AllStringRoutesNoStar.testExactMatchingPath }
+        path does not match if >= one token is not equal to a string part           ${ AllStringRoutesNoStar.testPartDoesntMatch }
+        path does not match if it has less tokens than route parts                  ${ AllStringRoutesNoStar.testLessTokensThanParts }
+        path does not match if it has more tokens than route parts                  ${ AllStringRoutesNoStar.testMoreTokensThanParts }
+        path data always has as empty dispatch path string                          ${ AllStringRoutesNoStar.testDispPathAlwaysEmpty }
+        path data always has an empty path tokens Seq                               ${ AllStringRoutesNoStar.testPathTokensAlwaysEmpty }
+
+      if the route does end in a star term
+        path matches if each token is equal to each string part                     ${ AllStringRoutesWithStar.testExactStartingWithMatch }
+        path matches with tokens equal to parts even with leftover tokens           ${ AllStringRoutesWithStar.testLeftoverTokensStillMatch }
+        path does not match if >= one token is not equal to a string part           ${ AllStringRoutesWithStar.testPartDoesntMatch }
+        path does not match if there are less tokens than route parts               ${ AllStringRoutesWithStar.testLessTokensThanParts }
+        path data has an empty dispatch string if num tokens == num route terms     ${ AllStringRoutesWithStar.testDispPathAlwaysEmpty }
+        path data has left over tokens seperated by slash as dispatch string        ${ AllStringRoutesWithStar.testLeftoverTokensDispPath }
+        path data has empty path tokens Seq if num tokens == num route terms        ${ AllStringRoutesWithStar.testLeftoverTokensPathTokens }
+        path data has left over tokens in path tokens Seq with order preserved      ${ AllStringRoutesWithStar.testPathTokensAlwaysEmpty }
+
+      path data always have empty path info map                                     ${ testStringRoutesAlwaysHaveEmptyPathInfo }
+
+    Routes with data parts
+      if the route does not end in a star term
+        if the route contains string terms
+          path matches iif each token that has corresponding string part matches    ${ MixedPathNoStar.testMatchesIIFStringPartsMatch }
+          path does not match if >= one token does not match corresponding string   ${ MixedPathNoStar.testStringPartDoesntMatch }
+          path does not match if it has less tokens than route parts                ${ MixedPathNoStar.testLessTokensThanParts }
+          path does not match if has more tokens than route parts                   ${ MixedPathNoStar.testMoreTokensThanParts }
+          path data always has as empty dispatch path string                        ${ MixedPathNoStar.testDispPathAlwaysEmpty }
+          path data always has an empty path tokens Seq                             ${ MixedPathNoStar.testPathTokensAlwaysEmpty }
+
+        if the route does not contain string terms
+          path matches only if the number of tokens equal the number of terms       ${ AllDataRouteNoStar.testEqualLengths }
+          the path does not match otherwise                                         ${ AllDataRouteNoStar.testUnequalLengths }
+          path data always has as empty dispatch path string                        ${ AllDataRouteNoStar.testDispPathAlwaysEmpty }
+          path data always has an empty path tokens Seq                             ${ AllDataRouteNoStar.testPathTokensAlwaysEmpty }
+
+      if the route ends in a star term
+        if the route contains string terms
+          path matches if each token thas has corresponding string part matches     ${ MixedPathWithStar.testMatchesIIFStringPartsMatch }
+          path matches with tokens equal to string parts even with leftover tokens  ${ MixedPathWithStar.testMatchesWithLeftoverTokens }
+          path does not match if >= one token is not equal to corresponding string  ${ MixedPathWithStar.testStringPartDoesntMatch }
+          path does not match if there are less tokens than route parts             ${ MixedPathWithStar.testLessTokensThanParts }
+          path data has an empty dispatch string if num tokens == num route terms   ${ MixedPathWithStar.testDispPathAlwaysEmpty }
+          path data has left over tokens seperated by slash as dispatch string      ${ MixedPathWithStar.testLeftoverTokensDispPath }
+          path data has empty path tokens Seq if num tokens == num route terms      ${ MixedPathWithStar.testPathTokensAlwaysEmpty  }
+          path data has left over tokens in path tokens Seq with order preserved    ${ MixedPathWithStar.testLeftoverTokensPathTokens }
+          
+        if the route does not contain string terms                                   
+          path matches only if the number of tokens is >= number of terms           ${ AllDataRouteWithStar.testWithLeftoverTokens }
+          the path does not match otherwise                                         ${ AllDataRouteWithStar.testLessTokensThanParts }
+          path data has an empty dispatch string if num tokens == num route terms   ${ AllDataRouteWithStar.testDispPathAlwaysEmpty }
+          path data has left over tokens seperated by slash as dispatch string      ${ AllDataRouteWithStar.testLeftoverTokensDispPath }
+          path data has empty path tokens Seq if num tokens == num route terms      ${ AllDataRouteWithStar.testPathTokensAlwaysEmpty }
+          path data has left over tokens in path tokens Seq with order preserved    ${ AllDataRouteWithStar.testLeftoverTokensPathTokens }
+          
+      path data's path info contains key corresponding to token for each data part  ${ testMixedRoutesPathInfo }
+                                                                                    
+  Matching Hosts                                                                     
+    if host route does not begin with a star term                                    
+      matches iif each token with corresponding string part matches                 ${ MixedHostNoStar.testMatchesIIFStringPartsMatch }
+      does not match if tokens.length < parts.length                                ${ MixedHostNoStar.testLessTokensThanParts }
+      does not match if tokens.length > parts.length                                ${ MixedHostNoStar.testMoreTokensThanParts }
+      does not match if >= 1 token does not match corresponding string part         ${ MixedHostNoStar.testStringPartDoesntMatch }
+      host data always has empty dispatch subdomain string                          ${ MixedHostNoStar.testDispSubDomainAlwaysEmpty }
+      host data always has empty subdomain tokens                                   ${ MixedHostNoStar.testSubdomainTokensAlwaysEmpty }
+      host data has entry in host info for every data part                          ${ MixedHostNoStar.testHostInfo }
+      
+    if host route begins with a star term                                           
+      matches iif each token with corresponding string part matches (lefovers ok)   ${ MixedHostWithStar.testMatchesWithLeftoverTokens }
+      does not match if tokens.length < parts.length                                ${ MixedHostWithStar.testLessTokensThanParts }
+      does not match if >= 1 token does not match corresponding string part         ${ MixedHostWithStar.testStringPartDoesntMatch }
+      host data has empty dispatch subdomain if tokens.length == parts.length       ${ MixedHostWithStar.testDispSubDomainAlwaysEmpty }
+      host data has leftover tokens seperated by dots as dispatch subdomain         ${ MixedHostWithStar.testLeftoverTokensDispSubdomain }
+      host data has empty dispatch tokens if tokens.length == parts.length          ${ MixedHostWithStar.testSubdomainTokensAlwaysEmpty }
+      host data has left tokens as dispatch tokens w/ order preserved               ${ MixedHostWithStar.testLeftoverTokensSubdomainTokens }
+      host data has entry in host info for every data part                          ${ MixedHostWithStar.testHostInfo }
+                                                                                    
+  Matching Hosts and Paths                                                           
+    matches if host and path route matches given host and path tokens               ${ testHostAndPathRoute }
+    does not match if host route does not match given host tokens                   ${ testHostAndPathHostNotMatching }
+    does not match if path route does not match given path tokens                   ${ testHostAndPathPathNotMatching }
+                                                                                    
+  Guards
+    if unguarded route matches                                                      
+      if guard returns true, route matches                                          ${ testGuardTrue }
+      if guard returns false, route does not match                                  ${ testGuardFalse }
+      
+    if unguarded route does not match, guard is never run                           ${ testGuardNotCalledWhenNotDefined }
+                                                                                    """
 
   def testGuardTrue = check {
     (pathParts: List[String]) => {

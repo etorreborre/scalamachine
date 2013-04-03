@@ -4,10 +4,8 @@ import com.github.siasia._
 import WebPlugin._
 import com.jsuereth.sbtsite._
 import com.jsuereth.git._
-import com.jsuereth.ghpages._
 import SitePlugin._
 import GitPlugin._
-import GhPages._
 import Keys._
 
 object BuildSettings {
@@ -75,6 +73,7 @@ object BuildSettings {
     scalacOptions ++= Seq("-deprecation", "-unchecked"),
     testOptions in Test += Tests.Argument("html", "console"),
     publishArtifact in Test := false,
+    logBuffered in Test := false,
     resolvers += ("twitter repository" at "http://maven.twttr.com"),
     resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
   )
@@ -95,7 +94,7 @@ object Dependencies {
   lazy val finagle         = "com.twitter"             %% "finagle-http"                 % "6.2.0"           % "compile"
   lazy val logback         = "ch.qos.logback"          % "logback-classic"               % "1.0.0"           % "compile"
 
-  lazy val specs2          = "org.specs2"              %% "specs2"                       % "1.12.3"          % "test"
+  lazy val specs2          = "org.specs2"              %% "specs2"                       % "1.15-SNAPSHOT"   % "test"
   lazy val scalacheck      = "org.scalacheck"          %% "scalacheck"                   % "1.10.0"          % "test"
   lazy val mockito         = "org.mockito"             % "mockito-all"                   % "1.9.0"           % "test"
   lazy val hamcrest        = "org.hamcrest"            % "hamcrest-all"                  % "1.1"             % "test"
@@ -122,14 +121,12 @@ object ScalamachineBuild extends Build {
   )
 
   lazy val core = Project("scalamachine-core", file("core"),
-    settings = standardSettings ++ publishSettings ++ site.settings ++ site.jekyllSupport("jekyll") ++ site.includeScaladoc() ++ ghpages.settings ++
+    settings = standardSettings ++ publishSettings ++ site.settings ++ site.jekyllSupport("jekyll") ++ site.includeScaladoc() ++
       Seq(
         name := "scalamachine-core",
         libraryDependencies ++= Seq(scalazCore, scalazIteratee, scalazEffect, slf4j, commonsHttp, specs2, scalacheck, mockito, hamcrest, pegdown),
         git.remoteRepo := "git@github.com:stackmob/scalamachine",
-        docsRepo := "git@github.com:stackmob/scalamachine.site",
-        git.branch in ghpages.updatedRepository := Some("master"),
-        ghpages.updatedRepository <<= updatedRepo(ghpages.repository, docsRepo, git.branch in ghpages.updatedRepository)  
+        docsRepo := "git@github.com:stackmob/scalamachine.site"
       )
   )
 

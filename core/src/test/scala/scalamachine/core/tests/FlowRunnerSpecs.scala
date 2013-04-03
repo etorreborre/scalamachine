@@ -8,30 +8,28 @@ import flow._
 import Res._
 
 
-class FlowRunnerSpecs extends Specification with Mockito { def is =
-  "FlowRunner".title                                                                ^
-  """
+class FlowRunnerSpecs extends Specification with Mockito { def is = s2""" ${"FlowRunner".title}
+
   The FlowRunner is responsible for running the webmachine flow
   for a given version. It is given a start decision and keeps running
   each decision until it is given a response instead.
-  """                                                                               ^
-                                                                                    p^
-  "Given a Decision returns no next decision"                                       ^
-    "the runner terminates running that decision last"                              ! testTerminatesWhenNoDecisionReturned ^
-    "returns the resulting data from the last decision"                             ! testTerminationReturnsCorrectData ^
-  "Given a decision returns another decision"                                       ^
-    "the runner runs the next decision passing in the resulting data"               ! testContinuesWhenGivenNextDecision ^
-                                                                                    endp^
-  "Given a Decision that results in an ErrorRes"                                    ^
-    "response code is set to 500"                                                   ! testDecisionResultsInErrorResCode500 ^
-    "response body is set to value of error if not set"                             ! testDecisionResultsInErrorResBodySetIfMissing ^
-    "response body is left unchanged if set"                                        ! testDecisionResultsInErrorResBodyNotSetIfExisting ^
-                                                                                    endp^
-  "Given a Decision that results in a HaltRes"                                      ^
-    "response code is set to given code"                                            ! testDecisionResultInHaltResUsingCodeGiven ^
-    "if response body is some and response body is not set, given body is set"      ! testDecisionResultsInHaltResBodySetIfMissing ^
-    "if response body is some and response body is set, given body not set"         ! testDecisionResultsInHaltResBodyNotSetIfExisting ^
-                                                                                    end
+
+  Given a Decision returns no next decision
+    the runner terminates running that decision last                              $testTerminatesWhenNoDecisionReturned
+    returns the resulting data from the last decision                             $testTerminationReturnsCorrectData
+  Given a decision returns another decision
+    the runner runs the next decision passing in the resulting data               $testContinuesWhenGivenNextDecision
+
+  Given a Decision that results in an ErrorRes
+    response code is set to 500                                                   $testDecisionResultsInErrorResCode500
+    response body is set to value of error if not set                             $testDecisionResultsInErrorResBodySetIfMissing
+    response body is left unchanged if set                                        $testDecisionResultsInErrorResBodyNotSetIfExisting
+
+  Given a Decision that results in a HaltRes
+    response code is set to given code                                            $testDecisionResultInHaltResUsingCodeGiven
+    if response body is some and response body is not set, given body is set      $testDecisionResultsInHaltResBodySetIfMissing
+    if response body is some and response body is set, given body not set         $testDecisionResultsInHaltResBodyNotSetIfExisting
+                                                                                  """
 
   trait TestFlowTracking extends FlowRunnerBase {
     var steps = List[(Decision, (Option[Decision], ReqRespData))]()

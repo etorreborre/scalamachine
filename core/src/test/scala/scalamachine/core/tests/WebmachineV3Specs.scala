@@ -16,166 +16,170 @@ import ReqRespData.Metadata
 import scalaz.iteratee.{IterateeT, EnumeratorT}
 import scalaz.effect.IO
 
-class WebmachineV3Specs extends Specification with Mockito with SpecsHelper with WebmachineDecisions { def is = ""            ^
-  "WebMachine V3".title                                                             ^
-  """
+class WebmachineV3Specs extends Specification with Mockito with SpecsHelper with WebmachineDecisions { def is = s2""" ${ "WebMachine V3".title }
+  
   The WebMachine Version 3 Flow
 
   http://wiki.basho.com/images/http-headers-status-v3.png
-  """                                                                               ^
-                                                                                    p^
-  "H7 - If-Match Exists?"                                                           ^
-    "if If-Match header exists, response with code 412 is returned"                 ! testH7IfMatchExists ^
-    "otherwise, I7 is returned"                                                     ! testH7IfMatchMissing ^
-                                                                                    p^
-  "H10 - If-Unmodified-Since Exists?"                                               ^
-    "if header exists, H11 is returned"                                             ! testIfUnmodifiedSinceExists ^
-    "otherwise I12 is returned"                                                     ! testIfUnmodifiedSinceMissing ^
-                                                                                    p^
-  "H11 - If-Unmodified-Since Valid Date?"                                           ^
-    "if date is valid RFC822/1123, H12 is returned"                                 ! testIUMSRFC822Valid ^
-    "if date is valid RFC850 (1036), H12 is returned"                               ! testIUMSRFC850Valid ^
-    "if date is valid ANSI C Time, H12 is returned"                                 ! testIUMSANSICValid ^
-    "otherwise, I12 is returned"                                                    ! testIUMSInvalid ^
-                                                                                    p^
-  "H12 - Resource Last Mod. Date > If-Unmodified-Since Date"                        ^
-    "if resource's last modified > If-Unmodified-Since, code 412 returned"          ! testIUMSLessThanLastMod ^
-    "otherwise, I12 returned"                                                       ! testIUMSGreaterThanLastMod ^
-                                                                                    p^
-  "I4 - Resource Moved Permanently?"                                                ^
-    "checks resource not moved permanently returning P3 if its not"                 ^ testIsResourceMovedPermanently(i4,p3) ^
-                                                                                    p^p^
-  "I7 - PUT?"                                                                       ^
-    "if the HTTP Method is PUT, I4 is returned"                                     ! testIsPutTrue ^
-    "otherwise K7 is returned"                                                      ! testIsPutFalse ^
-                                                                                    p^
-  "I12 - If-None-Match Exists?"                                                     ^
-    "if header exists, I13 is returned"                                             ! testIfNoneMatchExists ^
-    "otherwise, L13 is returned"                                                    ! testIfNoneMatchMissing ^
-                                                                                    p^
-  "I13 - If-None-Match: *?"                                                         ^
-    """if header has value "*", J18 is returned"""                                  ! testIfNoneMatchStar ^
-    "otherwise, K13 is returned"                                                    ! testIfNoneMatchNotStar ^
-                                                                                    p^
-  "J18 - GET or HEAD?"                                                              ^
-    "If request method is GET, response with code 304 is returned"                  ! testJ18IsGet ^
-    "If request method is HEAD, response with code 304 is returned"                 ! testJ18IsHead ^
-    "otherwise, response with code 412 returned"                                    ! testJ18Neither ^
-                                                                                    p^
-  "K5 - Resource Moved Peramently?"                                                 ^
-    "checks resource not moved permanently returning L5 if its not"                 ^ testIsResourceMovedPermanently(k5,l5) ^
-                                                                                    p^p^
-  "K7 - Resource Previously Existed"                                                ^
-    "if resource returns true, K5 is returned"                                      ! testResourceExistedPrevTrue ^
-    "if resource returns false, L7 is returned"                                     ! testResourceExistedPrevFalse ^
-                                                                                    p^
-  "K13 - ETag in If-None-Match?"                                                    ^
-    "if resource's etag is in list of etags, J18 is returned"                       ! testIfNoneMatchHasEtag ^
-    "otherwise, L13 is returned"                                                    ! testIfNoneMatchMissingEtag ^
-                                                                                    p^
-  "L5 - Resource Moved Temporarily?"                                                ^
-    "if temp. location returned, loc set in header, code 307 returned"              ! testResourceMovedTemporarily ^
-    "otherwise, M5 returned"                                                        ! testResourceNotMovedTemporarily ^
-                                                                                    p^
-  "L7 - POST?"                                                                      ^ testIsPost(l7,m7,404) ^
-                                                                                    p^
-  "L13 - If-Modified-Since Exists?"                                                 ^
-    "If header exists, L14 is returned"                                             ! testIMSExists ^
-    "otherwise, M16 is returned"                                                    ! testIMSMissing ^
-                                                                                    p^
-  "L14 - If-Modified-Since Valid Date?"                                             ^
-    "if date is valid, L15 is returned"                                             ! testIMSValid ^
-    "if date is not valid, M15 is returned"                                         ! testIMSInvalid ^
-                                                                                    p^
-  "L15 - If-Modified-Since > Now?"                                                  ^
-    "if date is in the future, M16 is returned"                                     ! testIMSInFuture ^
-    "if the date is not in the future, L17 is returned"                             ! testIMSNotInFuture ^
-                                                                                    p^
-  "L17 - If-Modified-Since > Last-Modified"                                         ^
-    "if resource has not been modified since the given time, code 304 is returned"  ! testLastModLessThanIMS ^
-    "if resource has been modified since given time, M16 is returned"               ! testLastModGreaterThanIMS ^
-                                                                                    p^
-  "M5 - POST?"                                                                      ^ testIsPost(m5,n5,410) ^
-                                                                                    p^
-  "M7 - Can POST to missing resource?"                                              ^
-    "if resource returns true, N11 is returned"                                     ! testDecisionReturnsDecision(m7,n11,_.allowMissingPost(any) answers mkAnswer(true)) ^
-    "otherwise, response with code 404 is returned"                                 ! testDecisionReturnsData(m7,_.allowMissingPost(any) answers mkAnswer(false)) { _.statusCode must_== 404 } ^
-                                                                                    p^
-  "M16 - DELETE?"                                                                   ^
-    "if request method is DELETE, M20 returned"                                     ! testDecisionReturnsDecision(m16,m20,r => {}, data = createData(method = DELETE)) ^
-    "otherwise, N16 returned"                                                       ! testDecisionReturnsDecision(m16,n16,r => {}, data = createData(method = GET)) ^
-                                                                                    p^
-  "M20 - Call Resource.deleteResource"                                              ^
-    "if true is returned, M20b is returned"                                         ! testDecisionReturnsDecision(m20,m20b,_.deleteResource(any) answers mkAnswer(true)) ^
-    "if false is returned, response with code 500 is returned"                      ! testDecisionReturnsData(m20,_.deleteResource(any) answers mkAnswer(false)) { _.statusCode must_== 500 } ^
-                                                                                    p^
-  "M20b - Delete Enacted? (Resource.deleteCompleted)"                               ^
-    "if true, O20 is returned"                                                      ! testDecisionReturnsDecision(m20b,o20,_.deleteCompleted(any) answers mkAnswer(true)) ^
-    "if false, response with code 202 is returned"                                  ! testDecisionReturnsData(m20b,_.deleteCompleted(any) answers mkAnswer(false)) { _.statusCode must_== 202 } ^
-                                                                                    p^
-  "N5 - Can POST to missing resource?"                                              ^
-    "if true, N11 returned"                                                         ! testDecisionReturnsDecision(n5,n11,_.allowMissingPost(any) answers mkAnswer(true)) ^
-    "otherwise, response with code 410 returned"                                    ! testDecisionReturnsData(n5,_.allowMissingPost(any) answers mkAnswer(false)) { _.statusCode must_== 410 } ^
-                                                                                    p^
-  "N11 - Process Post, Determine Redirect"                                          ^
-    "Process Post"                                                                  ^
-      "if Resource.postIsCreate returns true"                                       ^
-        "Resource.createPath is called"                                             ^
-          "if None returned, response with code 500 returned"                       ! testCreatePathNone ^
-          "if Some(path) is returned"                                               ^
-            "The returned path is set as the dispPath in the ReqRespData"           ! testCreatePathSomeSetsDispPath ^
-            "if the location header is not set, the full uri is set as its value"   ! testCreatePathSomeLocationNotSet ^
-            "if the location header is set, it is not modified"                     ! testCreatePathSomeLocationAlreadySet ^
-            "if request's content-type is not one of those accepted, 415 returned"  ! testN11ContentTypeNotAccepted ^
-            "if request's ctype is accepted and corresponding function returns true"^
-              "if body is set, it is charsetted then encoded"                       ! testN11ContentTypeAcceptedReturnsTrue ^p^
-            "if function corresponing to ctype returns false code 500 returned"     ! testN11ContentTypeAcceptedReturnsFalse ^p^p^
-      "if Resource.postIsCreate returns false"                                      ^
-        "Resource.processPost is called"                                            ^
-          "if true, the body is charsetted then encoded if set"                     ! testProcessPostTrue ^
-          "if true and body not set, charsetter and encoder not used"               ! testProcessPostTrueBodyNotSet ^
-          "if false, response with code 500 is returned"                            ! testProcessPostFalse ^p^p^p^
-    "Determine Redirect"                                                            ^
-      "If ReqRespData.doRedirect returns true"                                      ^
-        "if Location header is set, response with code 303 returned"                ! testDoRedirect ^
-      "If ReqRespData.doRedirect returns false, P11 returned"                       ! testNoRedirect ^
-                                                                                    p^p^
-  "N16 - POST?"                                                                     ^
-    "if request is POST, N11 returned"                                              ! testDecisionReturnsDecision(n16,n11,r => {}, data = createData(method = POST)) ^
-    "otherwise, O16 returned"                                                       ! testDecisionReturnsDecision(n16,o16,r => {}, data = createData(method = GET)) ^
-                                                                                    p^
-  "O14 - Conflict?"                                                                 ^
-    "if Resource.isConflict returns true, response w/ code 409 returned"            ! testDecisionReturnsData(o14,_.isConflict(any).answers(mkAnswer(true))) { _.statusCode must beEqualTo(409) } ^
-    "otherwise"                                                                     ^
-      "if request's ctype is accepted and corresponding func. returns true"         ^
-        "if body is set it is charsetted and encoded, P11 returned"                 ! testO14ContentTypeAcceptedReturnsTrue ^p^
-      "if request's ctype is accepted but func. returns false, 500 returned"        ! testO14ContentTypeAcceptedReturnsFalse ^
-      "if reques's ctype not accepted 415 returned"                                 ! testO14ContentTypeNotAccepted ^
-                                                                                    p^p^
-  "O16 - PUT?"                                                                      ^
-    "if request is PUT, O14 returned"                                               ! testDecisionReturnsDecision(o16,o14,r => {}, data = createData(method = PUT)) ^
-    "otherwise, O18 returned"                                                       ! testDecisionReturnsDecision(o16,o18,r => {}, data = createData(method = GET)) ^
-                                                                                    p^
-  "O18 - Multiple Representations?"                                                 ^
-    "If request is a GET or HEAD request"                                           ^
-      "if Resource.generateEtag is some, Etag header is set to value"               ! testO18EtagGenerated ^
-      "if Resource.lastModified returns date, string value set in Last-Modified"    ! testO18LastModExists ^
-      "if Resource.expires returns a datae, string value set in Expires"            ! testO18ExpiresExists ^
-      "otherwise Last-Modified, Expires & Etag not set"                             ! testO18NotGenerated  ^
-      "chosen content type function is run"                                         ^
-        "result is set in body after being charsetted then encoded"                 ! testO18BodyProductionTest ^
-        "lazy streamed bodies are also charset then encoded"                        ! testO18LazyStreamBodyProductionTest ^p^p^
-    "If Resource.multipleChoices returns true, response with code 300 returned"     ! testMultipleChoicesTrue ^
-    "otherwise response with code 200 returned"                                     ! testMultipleChoicesFalse ^
-                                                                                    p^
-  "O20 - Response includes an entity?"                                              ^
-    "if EmptyBody, response with code 204 returned"                                 ! testDecisionReturnsData(o20,r => {}) { _.statusCode must beEqualTo(204) } ^
-    "otherwise, O18 returned"                                                       ! testDecisionReturnsDecision(o20,o18,r =>{},data=createData(respBody="1".getBytes)) ^
-                                                                                    p^
-  "P11 - New Resource?"                                                             ^
-    "if location header is set, response with code 201 returned"                    ! testDecisionReturnsData(p11,r=>{},data=createData(respHdrs=Map(Location-> "a"))) { _.statusCode must_== 201 } ^
-    "otherwise, O20 returned"                                                       ! testDecisionReturnsDecision(p11,o20,r => {})
-                                                                                    end
+  
+                                                                                   
+  H7 - If-Match Exists?                                                            
+    if If-Match header exists, response with code 412 is returned                   $testH7IfMatchExists 
+    otherwise, I7 is returned                                                       $testH7IfMatchMissing 
+                                                                                   
+  H10 - If-Unmodified-Since Exists?                                                
+    if header exists, H11 is returned                                               $testIfUnmodifiedSinceExists 
+    otherwise I12 is returned                                                       $testIfUnmodifiedSinceMissing 
+                                                                                   
+  H11 - If-Unmodified-Since Valid Date?                                            
+    if date is valid RFC822/1123, H12 is returned                                   $testIUMSRFC822Valid 
+    if date is valid RFC850 (1036), H12 is returned                                 $testIUMSRFC850Valid 
+    if date is valid ANSI C Time, H12 is returned                                   $testIUMSANSICValid 
+    otherwise, I12 is returned                                                      $testIUMSInvalid 
+                                                                                   
+  H12 - Resource Last Mod. Date > If-Unmodified-Since Date                         
+    if resource's last modified > If-Unmodified-Since, code 412 returned            $testIUMSLessThanLastMod 
+    otherwise, I12 returned                                                         $testIUMSGreaterThanLastMod 
+                                                                                    
+  I4 - Resource Moved Permanently?                                                  
+    checks resource not moved permanently returning P3 if its not                   ${testIsResourceMovedPermanently(i4,p3)} 
+                                                                                   
+  I7 - PUT?                                                                        
+    if the HTTP Method is PUT, I4 is returned                                       $testIsPutTrue 
+    otherwise K7 is returned                                                        $testIsPutFalse 
+                                                                                   
+  I12 - If-None-Match Exists?                                                      
+    if header exists, I13 is returned                                               $testIfNoneMatchExists 
+    otherwise, L13 is returned                                                      $testIfNoneMatchMissing 
+                                                                                   
+  I13 - If-None-Match: *?                                                           
+    if header has value *, J18 is returned                                          $testIfNoneMatchStar 
+    otherwise, K13 is returned                                                      $testIfNoneMatchNotStar 
+                                                                                    
+  J18 - GET or HEAD?                                                                
+    If request method is GET, response with code 304 is returned                    $testJ18IsGet 
+    If request method is HEAD, response with code 304 is returned                   $testJ18IsHead 
+    otherwise, response with code 412 returned                                      $testJ18Neither 
+                                                                                   
+  K5 - Resource Moved Permanently?
+    checks resource not moved permanently returning L5 if its not                   ${testIsResourceMovedPermanently(k5,l5)} 
+                                                                                    
+  K7 - Resource Previously Existed                                                  
+    if resource returns true, K5 is returned                                        $testResourceExistedPrevTrue 
+    if resource returns false, L7 is returned                                       $testResourceExistedPrevFalse 
+                                                                                   
+  K13 - ETag in If-None-Match?                                                     
+    if resource's etag is in list of etags, J18 is returned                         $testIfNoneMatchHasEtag 
+    otherwise, L13 is returned                                                      $testIfNoneMatchMissingEtag 
+                                                                                   
+  L5 - Resource Moved Temporarily?                                                 
+    if temp. location returned, loc set in header, code 307 returned                $testResourceMovedTemporarily 
+    otherwise, M5 returned                                                          $testResourceNotMovedTemporarily 
+                                                                                     
+  L7 - POST?                                                                        ${testIsPost(l7,m7,404)} 
+                                                                                    
+  L13 - If-Modified-Since Exists?                                                   
+    If header exists, L14 is returned                                               $testIMSExists 
+    otherwise, M16 is returned                                                      $testIMSMissing 
+                                                                                    
+  L14 - If-Modified-Since Valid Date?                                               
+    if date is valid, L15 is returned                                               $testIMSValid 
+    if date is not valid, M15 is returned                                           $testIMSInvalid 
+                                                                                    
+  L15 - If-Modified-Since > Now?                                                    
+    if date is in the future, M16 is returned                                       $testIMSInFuture 
+    if the date is not in the future, L17 is returned                               $testIMSNotInFuture 
+                                                                                    
+  L17 - If-Modified-Since > Last-Modified                                           
+    if resource has not been modified since the given time, code 304 is returned    $testLastModLessThanIMS 
+    if resource has been modified since given time, M16 is returned                 $testLastModGreaterThanIMS 
+                                                                                      
+  M5 - POST?                                                                        ${testIsPost(m5,n5,410)} 
+                                                                                      
+  M7 - Can POST to missing resource?                                                
+    if resource returns true, N11 is returned                                       ${testDecisionReturnsDecision(m7,n11,_.allowMissingPost(any) answers mkAnswer(true))} 
+    otherwise, response with code 404 is returned                                   ${testDecisionReturnsData(m7,_.allowMissingPost(any) answers mkAnswer(false)) { _.statusCode must_== 404 }} 
+                                                                                    
+  M16 - DELETE?                                                                     
+    if request method is DELETE, M20 returned                                       ${testDecisionReturnsDecision(m16,m20,r => {}, data = createData(method = DELETE))}
+    otherwise, N16 returned                                                         ${testDecisionReturnsDecision(m16,n16,r => {}, data = createData(method = GET))}
+                                                                                    
+  M20 - Call Resource.deleteResource                                                
+    if true is returned, M20b is returned                                           ${testDecisionReturnsDecision(m20,m20b,_.deleteResource(any) answers mkAnswer(true))}
+    if false is returned, response with code 500 is returned                        ${testDecisionReturnsData(m20,_.deleteResource(any) answers mkAnswer(false)) { _.statusCode must_== 500 }}
+                                                                                    
+  M20b - Delete Enacted? (Resource.deleteCompleted)                                 
+    if true, O20 is returned                                                        ${testDecisionReturnsDecision(m20b,o20,_.deleteCompleted(any) answers mkAnswer(true))}
+    if false, response with code 202 is returned                                    ${testDecisionReturnsData(m20b,_.deleteCompleted(any) answers mkAnswer(false)) { _.statusCode must_== 202 }}
+                                                                                    
+  N5 - Can POST to missing resource?                                                
+    if true, N11 returned                                                           ${testDecisionReturnsDecision(n5,n11,_.allowMissingPost(any) answers mkAnswer(true))}
+    otherwise, response with code 410 returned                                      ${testDecisionReturnsData(n5,_.allowMissingPost(any) answers mkAnswer(false)) { _.statusCode must_== 410 }}
+                                                                                    
+  N11 - Process Post, Determine Redirect                                            
+    Process Post                                                                    
+      if Resource.postIsCreate returns true                                         
+        Resource.createPath is called                                               
+          if None returned, response with code 500 returned                         $testCreatePathNone 
+          if Some(path) is returned                                                 
+            The returned path is set as the dispPath in the ReqRespData             $testCreatePathSomeSetsDispPath 
+            if the location header is not set, the full uri is set as its value     $testCreatePathSomeLocationNotSet 
+            if the location header is set, it is not modified                       $testCreatePathSomeLocationAlreadySet 
+            if request's content-type is not one of those accepted, 415 returned    $testN11ContentTypeNotAccepted 
+            if request's ctype is accepted and corresponding function returns true 
+              if body is set, it is charsetted then encoded                         $testN11ContentTypeAcceptedReturnsTrue 
+              
+            if function corresponing to ctype returns false code 500 returned       $testN11ContentTypeAcceptedReturnsFalse 
+            
+      if Resource.postIsCreate returns false                                       
+        Resource.processPost is called                                             
+          if true, the body is charsetted then encoded if set                       $testProcessPostTrue 
+          if true and body not set, charsetter and encoder not used                 $testProcessPostTrueBodyNotSet 
+          if false, response with code 500 is returned                              $testProcessPostFalse 
+          
+    Determine Redirect                                                             
+      If ReqRespData.doRedirect returns true                                       
+        if Location header is set, response with code 303 returned                  $testDoRedirect 
+      If ReqRespData.doRedirect returns false, P11 returned                         $testNoRedirect 
+                                                                                      
+  N16 - POST?                                                                       
+    if request is POST, N11 returned                                                ${testDecisionReturnsDecision(n16,n11,r => {}, data = createData(method = POST))}
+    otherwise, O16 returned                                                         ${testDecisionReturnsDecision(n16,o16,r => {}, data = createData(method = GET))}
+                                                                                    
+  O14 - Conflict?                                                                   
+    if Resource.isConflict returns true, response w/ code 409 returned              ${testDecisionReturnsData(o14,_.isConflict(any).answers(mkAnswer(true))) { _.statusCode must beEqualTo(409) }}
+    otherwise                                                                       
+      if request's ctype is accepted and corresponding func. returns true           
+        if body is set it is charsetted and encoded, P11 returned                   $testO14ContentTypeAcceptedReturnsTrue 
+        
+      if request's ctype is accepted but func. returns false, 500 returned          $testO14ContentTypeAcceptedReturnsFalse 
+      if reques's ctype not accepted 415 returned                                   $testO14ContentTypeNotAccepted 
+                                                                                   
+  O16 - PUT?                                                                       
+    if request is PUT, O14 returned                                                 ${testDecisionReturnsDecision(o16,o14,r => {}, data = createData(method = PUT))}
+    otherwise, O18 returned                                                         ${testDecisionReturnsDecision(o16,o18,r => {}, data = createData(method = GET))}
+                                                                                   
+  O18 - Multiple Representations?                                                  
+    If request is a GET or HEAD request                                            
+      if Resource.generateEtag is some, Etag header is set to value                 $testO18EtagGenerated 
+      if Resource.lastModified returns date, string value set in Last-Modified      $testO18LastModExists 
+      if Resource.expires returns a datae, string value set in Expires              $testO18ExpiresExists 
+      otherwise Last-Modified, Expires & Etag not set                               $testO18NotGenerated  
+      chosen content type function is run                                           
+        result is set in body after being charsetted then encoded                   $testO18BodyProductionTest 
+        lazy streamed bodies are also charset then encoded                          $testO18LazyStreamBodyProductionTest 
+        
+    If Resource.multipleChoices returns true, response with code 300 returned       $testMultipleChoicesTrue 
+    otherwise response with code 200 returned                                       $testMultipleChoicesFalse 
+                                                                                   
+  O20 - Response includes an entity?                                               
+    if EmptyBody, response with code 204 returned                                   ${testDecisionReturnsData(o20,r => {}) { _.statusCode must beEqualTo(204) }}
+    otherwise, O18 returned                                                         ${testDecisionReturnsDecision(o20,o18,r =>{},data=createData(respBody="1".getBytes))}
+
+  P11 - New Resource?
+    if location header is set, response with code 201 returned                      ${testDecisionReturnsData(p11,r=>{},data=createData(respHdrs=Map(Location-> "a"))) { _.statusCode must_== 201 }}
+    otherwise, O20 returned                                                         ${testDecisionReturnsDecision(p11,o20,r => {})}
+                                                                                    """
 
   // TODO: tests around halt result, error result, empty result, since that logic is no longer in flow runner where test used to be
 
@@ -464,11 +468,12 @@ class WebmachineV3Specs extends Specification with Mockito with SpecsHelper with
     testDecisionReturnsDecision(i12,l13,r => {})
   }
 
-  def testIsResourceMovedPermanently(toTest: Decision, proceed: Decision) =
-    "if resource returns a location where the resource has been moved"            ^
-      "response has Location header set to returned value, and status 301"        ! testResourceMovedPermanently(toTest) ^p^
-    "otherwise the decision to proceed with is returned"                          ! testResourceNotMovedPermanently(toTest,proceed)
+  def testIsResourceMovedPermanently(toTest: Decision, proceed: Decision) = s2"""
+    if resource returns a location where the resource has been moved
+     response has Location header set to returned value, and status 301        ${testResourceMovedPermanently(toTest)}
 
+    otherwise the decision to proceed with is returned                         ${testResourceNotMovedPermanently(toTest,proceed)}
+                                                                               """
 
   def testResourceMovedPermanently(toTest: Decision) = {
     val location = "http://somewhere.com"
@@ -538,10 +543,10 @@ class WebmachineV3Specs extends Specification with Mockito with SpecsHelper with
     testDecisionReturnsDecision(l5,m5,_.movedTemporarily(any) answers mkAnswer(None))
   }
 
-  def testIsPost(toTest: Decision,whenPost:Decision,whenNot:Int) =
-    "if request method is POST, " + whenPost.name + "  is returned"                   ! testRequestIsPost(toTest,whenPost) ^
-    "if request method is not POST, response w/ code " + whenNot + " returned"      ! testRequestNotPost(toTest,whenNot)
-
+  def testIsPost(toTest: Decision,whenPost:Decision,whenNot:Int) = s2"""
+    if request method is POST, ${whenPost.name} is returned                       ${ testRequestIsPost(toTest,whenPost) }
+    if request method is not POST, response w/ code ${whenNot.toString} returned  ${ testRequestNotPost(toTest,whenNot) }
+                                                                                  """
 
   def testRequestIsPost(toTest: Decision, expected: Decision) = {
     testDecisionReturnsDecision(toTest,expected,r => {},data = createData(method = POST))

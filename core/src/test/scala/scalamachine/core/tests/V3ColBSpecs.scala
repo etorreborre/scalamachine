@@ -14,71 +14,71 @@ import HTTPHeaders._
 import HTTPMethods._
 
 
-class V3ColBSpecs extends Specification with Mockito with SpecsHelper with WebmachineDecisions { def is =
-  "Webmachine V3 Column B".title                                                    ^
-                                                                                    p^
-  "B13 - Service Available?"                                                        ^
-    "asks the resource if the service is available"                                 ^
-      "if it is, decision B12 is returned"                                          ! testServiceAvailTrue ^
-      "if it is not, a response with code 503 is returned"                          ! testServiceAvailFalse ^
-                                                                                    p^p^
-  "B12 - Known Method?"                                                             ^
-    "asks the resource for the list of known methods"                               ^
-      "if the request method is in the list, decision B11 is returned"              ! testKnownMethodTrue ^
-      "if it is not, a response with code 501 is returned"                          ! testKnownMethodFalse ^
-                                                                                    p^p^
-  "B11 - URI too long?"                                                             ^
-    "asks the resource if the request uri is too long"                              ^
-      "if it is not, decision b10 is returned"                                      ! testURITooLongFalse ^
-      "if it is, a response with code 414 is returned"                              ! testURITooLongTrue ^
-                                                                                    p^p^
-  "B10 - Allowed Method?"                                                           ^
-    "asks resource for list of allowed methods"                                     ^
-      "if request method is contained in allowed methods, decision B9 is returned"  ! testAllowedMethodTrue ^
-      "if request method is not contained in allowed methods, a response"           ^
-        "with code 405 is returned"                                                 ! testAllowedMethodFalseRespCode ^
-        "with Allow header set to comma-sep list of allowed methods from resource"  ! testAllowedMethodFalseAllowHeader ^
-                                                                                    p^p^p^
-  "B9 - Malformed Request?"                                                         ^
-    "asks resource if request is malformed"                                         ^
-      "if it is not, decision b8 is returned"                                       ! testMalformedFalse ^
-      "if it is, a response with code 400 is returned"                              ! testMalformedTrue ^
-                                                                                    p^p^
-  "B8 - Authorized"                                                                 ^
-    "asks resource if request is authorized"                                        ^
-      "if it is, decision B7 is returned"                                           ! testAuthTrue ^
-      "if it is not, a response"                                                    ^
-        "with code 401 is returned"                                                 ! testAuthFalseRespCode ^
-        "with the WWW-Authenticate header not set if resource result was a halt"    ! testAuthFalseHaltResult ^
-        "with the WWW-Authenticate header not set if the resource result was error" ! testAuthFalseErrorResult ^
-        "with the WWW-Authenticate header set to value returned by resource"        ! testAuthFalseAuthHeader ^
-                                                                                    p^p^p^
-  "B7 - Forbidden?"                                                                 ^
-    "asks resource if request is forbidden"                                         ^
-      "if it is not, decision B6 is returned"                                       ! testForbiddenFalse ^
-      "if it is, a response with code 403 is returned"                              ! testForbiddenTrue ^
-                                                                                    p^p^
-  "B6 - Valid Content-* Headers?"                                                   ^
-    "asks resource if content headers are valid"                                    ^
-      "if they are, decision B5 is returned"                                        ! testValidContentHeadersTrue ^
-      "if they are not, a response with code 501 is returned"                       ! testValidContentHeadersFalse ^
-                                                                                    p^p^
-  "B5 - Known Content Type?"                                                        ^
-    "asks resource if the Content-Type is known"                                    ^
-      "if it is, decision B4 is returned"                                           ! testKnownContentTypeTrue ^
-      "if it is not, a response with code 415 is returned"                          ! testKnownContentTypeFalse ^
-                                                                                    p^p^
-  "B4 - Request Entity Too Large?"                                                  ^
-    "asks resource if the request entity length is valid"                           ^
-      "if it is, decision B3 is returned"                                           ! testIsValidEntityLengthTrue ^
-      "if it is not, a response with code 413 is returned"                          ! testIsValidEntityLengthFalse ^
-                                                                                    p^p^
-  "B3 - OPTIONS?"                                                                   ^
-    "if the request method is OPTIONS"                                              ^
-      "a response with code 200 is returned"                                        ! testRequestIsOptions ^
-      "response has headers returned by Resource.options"                           ! testRequestIsOptionsUsesResourceOptionsHeaders ^p^
-    "otherwise, decision C3 is returned"                                            ! testRequestIsNotOptions ^
-                                                                                    end
+class V3ColBSpecs extends Specification with Mockito with SpecsHelper with WebmachineDecisions { def is = s2""" ${ "Webmachine V3 Column B".title }
+
+  B13 - Service Available?
+    asks the resource if the service is available
+      if it is, decision B12 is returned                                          $testServiceAvailTrue 
+      if it is not, a response with code 503 is returned                          $testServiceAvailFalse 
+
+  B12 - Known Method?                                                             
+    asks the resource for the list of known methods                               
+      if the request method is in the list, decision B11 is returned              $testKnownMethodTrue 
+      if it is not, a response with code 501 is returned                          $testKnownMethodFalse 
+                                                                                 
+  B11 - URI too long?                                                            
+    asks the resource if the request uri is too long                             
+      if it is not, decision b10 is returned                                      $testURITooLongFalse 
+      if it is, a response with code 414 is returned                              $testURITooLongTrue 
+                                                                                   
+  B10 - Allowed Method?                                                          
+    asks resource for list of allowed methods                                    
+      if request method is contained in allowed methods, decision B9 is returned  $testAllowedMethodTrue 
+      if request method is not contained in allowed methods, a response           
+        with code 405 is returned                                                 $testAllowedMethodFalseRespCode 
+        with Allow header set to comma-sep list of allowed methods from resource  $testAllowedMethodFalseAllowHeader 
+                                                                                 
+  B9 - Malformed Request?                                                        
+    asks resource if request is malformed                                        
+      if it is not, decision b8 is returned                                       $testMalformedFalse 
+      if it is, a response with code 400 is returned                              $testMalformedTrue 
+                                                                                  
+  B8 - Authorized                                                                 
+    asks resource if request is authorized                                        
+      if it is, decision B7 is returned                                           $testAuthTrue 
+      if it is not, a response                                                    
+        with code 401 is returned                                                 $testAuthFalseRespCode 
+        with the WWW-Authenticate header not set if resource result was a halt    $testAuthFalseHaltResult 
+        with the WWW-Authenticate header not set if the resource result was error $testAuthFalseErrorResult 
+        with the WWW-Authenticate header set to value returned by resource        $testAuthFalseAuthHeader 
+                                                                                  
+  B7 - Forbidden?                                                                 
+    asks resource if request is forbidden                                         
+      if it is not, decision B6 is returned                                       $testForbiddenFalse 
+      if it is, a response with code 403 is returned                              $testForbiddenTrue 
+                                                                                  
+  B6 - Valid Content-* Headers?                                                   
+    asks resource if content headers are valid                                    
+      if they are, decision B5 is returned                                        $testValidContentHeadersTrue 
+      if they are not, a response with code 501 is returned                       $testValidContentHeadersFalse 
+                                                                                  
+  B5 - Known Content Type?                                                        
+    asks resource if the Content-Type is known                                    
+      if it is, decision B4 is returned                                           $testKnownContentTypeTrue 
+      if it is not, a response with code 415 is returned                          $testKnownContentTypeFalse 
+                                                                                  
+  B4 - Request Entity Too Large?                                                  
+    asks resource if the request entity length is valid                           
+      if it is, decision B3 is returned                                           $testIsValidEntityLengthTrue 
+      if it is not, a response with code 413 is returned                          $testIsValidEntityLengthFalse 
+                                                                                  
+  B3 - OPTIONS?                                                                   
+    if the request method is OPTIONS                                              
+      a response with code 200 is returned                                        $testRequestIsOptions 
+      response has headers returned by Resource.options                           $testRequestIsOptionsUsesResourceOptionsHeaders 
+      
+    otherwise, decision C3 is returned                                            $testRequestIsNotOptions 
+                                                                                  """
 
   def testServiceAvailTrue = {
     testDecisionReturnsDecision(b13, b12, _.serviceAvailable(any) answers mkAnswer(true))

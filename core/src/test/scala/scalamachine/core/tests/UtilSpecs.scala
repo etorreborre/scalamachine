@@ -7,59 +7,61 @@ import org.scalacheck.{Arbitrary, Gen, Prop}
 import Prop._
 import org.specs2.matcher.Matcher
 
-class UtilSpecs extends Specification with ScalaCheck { def is =
-  "Utility Functions".title                                                         ^
-  """
+class UtilSpecs extends Specification with ScalaCheck { def is = s2""" ${ "Utility Functions".title }
+  
   This spec contains tests for various utility functions
   that provide functionality like choosing content types
   and languages.
-  """                                                                               ^
-                                                                                    p^
-  "Parsing accept header values"                                                    ^
-    "If the header value is empty, an empty list is returned"                       ! { acceptToMediaTypes("") must beEmpty } ^
-    "If the header value is invalid, an empty list is returned"                     ! { acceptToMediaTypes("abc") must beEmpty } ^
-    "If the header value is valid"                                                  ^
-      "If the value contains no commas a single element is always returned"         ! singleMediaEntryReturnsSize1 ^
-      "If the value contains comma seperated values"                                ^
-        "returned list contains entry per value"                                    ! testManyMediaEntries^
-        "Sorting"                                                                   ^
-          "items are sorted by q val, with default q=1"                             ! testSortedQVals ^
-                                                                                    endp^
-  "Choosing Content Types given provided types and accept header value"             ^
-    "Given an empty list of provided content types, None is returned"               ! testEmptyProvidedValidAccept ^
-    "Given an invalid acceptable media header, None is returned"                    ! testInvalidAcceptHeader ^
-    "Given a provided list containing one content type and a valid header"          ^
-      "If there is no acceptable type None is returned"                             ! testOneProvidedNoAcceptable ^
-      "if there is an acceptable content type the only type provided is returned"   ! testOneProvidedWithAcceptable ^p^
-    "Given a provided list containing > 1 content type and a valid header"          ^
-      "If there is noacceptable type None is returned"                              ! skipped ^
-      "If there is an acceptable media type the one w/ highest q value is chosen"   ! skipped ^    
-                                                                                    endp^
-  "Parsing Accept Charset/Encoding Header Values"                                   ^
-    "If the header value is empty, an empty list is returned"                       ! { acceptCharsetToList("") must beEmpty } ^
-    "if the header value is valid"                                                  ^
-      "If the value contains no commas a single element is always returned"         ! testOneAcceptValue ^
-      "If the value contains comma seperated values"                                ^
-        "returned list contains entry per value"                                    ! testManyAcceptValues ^
-        "Sorting"                                                                   ^
-          "items are sorted by q val, with default q=1"                             ! testSortAcceptValues ^
-                                                                                    endp^
-  "Choosing Charset given provided types and accept-charset header value"           ^
-    "Given an empty list of provided content types, None is returned"               ! { chooseAcceptable(Nil, "*", "somedefault") must beNone } ^
-    "Given a non-empty provided list and a valid header"                            ^
-      "if none of the acceptable types (excluding *) are provided"                  ^
-        "if star priority is not 0, first provided type is returned"                ! testNoneAcceptableStarNot0 ^
-        "if star priority is 0"                                                     ^
-          "if default priority is not 0"                                            ^
-            "if it is provided, it is returned"                                     ! testNoneAcceptableDefaultAcceptableProvided ^
-            "if it is not provided, none is returned"                               ! testNoneAcceptableDefaultAcceptableNotProvided ^p^
-          "if default priority is 0"                                                ^
-            "None is returned"                                                      ! testNoneAcceptableDefaultNotAcceptable^p^p^p^
-     "if acceptable type contained in provided list"                                ^
-       "values with priority 0 are not returned"                                    ! testPriorityZeroNotReturned ^
-       "if the priority is not 0"                                                   ^
-         "the highest priority value is returned"                                   ! testHighestPriorityReturned ^
-                                                                                    end
+                                                                                 
+                                                                                 
+  Parsing accept header values                                                   
+    If the header value is empty, an empty list is returned                       ${ acceptToMediaTypes("") must beEmpty } 
+    If the header value is invalid, an empty list is returned                     ${ acceptToMediaTypes("abc") must beEmpty } 
+    If the header value is valid                                                   
+      If the value contains no commas a single element is always returned         ${ singleMediaEntryReturnsSize1 }
+      If the value contains comma seperated values                               
+        returned list contains entry per value                                    ${ testManyMediaEntries }
+        Sorting                                                                  
+          items are sorted by q val, with default q=1                             ${ testSortedQVals }
+                                                                                  
+  Choosing Content Types given provided types and accept header value             
+    Given an empty list of provided content types, None is returned               ${ testEmptyProvidedValidAccept }
+    Given an invalid acceptable media header, None is returned                    ${ testInvalidAcceptHeader }
+    Given a provided list containing one content type and a valid header           
+      If there is no acceptable type None is returned                             ${ testOneProvidedNoAcceptable }
+      if there is an acceptable content type the only type provided is returned   ${ testOneProvidedWithAcceptable }
+      
+    Given a provided list containing > 1 content type and a valid header           
+      If there is noacceptable type None is returned                              ${ skipped }
+      If there is an acceptable media type the one w/ highest q value is chosen   ${ skipped }    
+                                                                                  
+  Parsing Accept Charset/Encoding Header Values                                   
+    If the header value is empty, an empty list is returned                       ${ acceptCharsetToList("") must beEmpty }
+    if the header value is valid                                                   
+      If the value contains no commas a single element is always returned         ${ testOneAcceptValue }
+      If the value contains comma seperated values                                 
+        returned list contains entry per value                                    ${ testManyAcceptValues }
+        Sorting                                                                  
+          items are sorted by q val, with default q=1                             ${ testSortAcceptValues }
+                                                                                 
+  Choosing Charset given provided types and accept-charset header value          
+    Given an empty list of provided content types, None is returned               ${ chooseAcceptable(Nil, "*", "somedefault") must beNone }
+    Given a non-empty provided list and a valid header                           
+      if none of the acceptable types (excluding *) are provided                 
+        if star priority is not 0, first provided type is returned                ${ testNoneAcceptableStarNot0 }
+        if star priority is 0                                                      
+          if default priority is not 0                                             
+            if it is provided, it is returned                                     ${ testNoneAcceptableDefaultAcceptableProvided }
+            if it is not provided, none is returned                               ${ testNoneAcceptableDefaultAcceptableNotProvided }
+            
+          if default priority is 0                                                 
+            None is returned                                                      ${ testNoneAcceptableDefaultNotAcceptable }
+            
+     if acceptable type contained in provided list                                 
+       values with priority 0 are not returned                                    ${ testPriorityZeroNotReturned }
+       if the priority is not 0                                                    
+         the highest priority value is returned                                   ${ testHighestPriorityReturned }
+                                                                                  """
 
   // TODO: add tests for sorting by specificity of content type
 
@@ -122,7 +124,7 @@ class UtilSpecs extends Specification with ScalaCheck { def is =
       results must containAllOf(realQs.toList.sortWith(_ > _)).inOrder ^^ ((i: Double, j: Double ) => i-j < 0.01) // adjust for loss of precision
 
     }
-  }.set(minTestsOk->10)
+  }.set(minTestsOk = 10)
 
   def testEmptyProvidedValidAccept = chooseMediaType(Nil, "text/plain") must beNone
   def testInvalidAcceptHeader = chooseMediaType(List(ContentType("text/plain")), "invalid") must beNone 
@@ -178,7 +180,7 @@ class UtilSpecs extends Specification with ScalaCheck { def is =
       // need to reverse because beSorted checks ascending order and we want descending
       acceptCharsetToList(string).unzip._2.reverse must beSorted
     }
-  }.set(minTestsOk -> 10)
+  }.set(minTestsOk = 10)
 
   val random = new scala.util.Random
   def testNoneAcceptableStarNot0 = forAll(
